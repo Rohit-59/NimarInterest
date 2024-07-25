@@ -1,0 +1,12 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.IVRM.NimarMotors
+win:
+  target: nsis
+  icon: build/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+files: []
+electronVersion: 30.0.1

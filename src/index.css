@@ -1,0 +1,215 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  overflow-x: hidden;
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  line-height: 1;
+  color: #fff;
+  background: #FFFAE6;
+  margin: auto;
+}
+
+.container1,
+.container2 {
+  margin: 2px;
+}
+
+input[type="number"],
+input[type="text"],
+input[type="date"] {
+  padding: 10px;
+  margin: 5px 0;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  font-family: 'Arial', sans-serif;
+
+}
+
+input[type="file"] {
+  padding: 10px;
+  margin: 5px 0;
+  box-sizing: border-box;
+  border-radius: 4px;
+  font-size: 16px;
+  font-family: 'Arial', sans-serif;
+}
+
+input[type="text"] {
+  width: 30%;
+}
+
+
+input[type="number"]:focus,
+input[type="text"]:focus,
+input[type="date"]:focus,
+input[type="file"]:focus {
+  border-color: #b40000;
+  outline: none;
+}
+
+.vl {
+  border-left: 2px solid black;
+  height: 450px;
+  margin: 55px 0 0 20px;
+}
+
+.balloon {
+  color: black;
+  width: 45%;
+}
+
+button {
+  font-weight: bold;
+  color: #fff;
+  padding: 4px;
+  border-radius: 4px;
+  margin: 0 2px;
+  border: none;
+  background-color: #0e4fae;
+  padding: 10px 30px;
+  margin: 0 10px;
+}
+
+button:hover {
+  background-color: rgb(34, 93, 182);
+  box-shadow: 3px 3px 7px rgb(14, 73, 161, 0.3);
+}
+
+.list-container ul {
+  font-size: 15px;
+  margin: 0px;
+}
+
+p {
+  margin: 5px;
+  line-height: 1.5;
+  word-spacing: 4px;
+  
+}
+
+input[type="file"]::file-selector-button {
+  font-weight: bold;
+  color: #fff;
+  padding: 4px;
+  border-radius: 4px;
+  border: none;
+  content: "Select File";
+  background-color: #7f7f7f;
+  padding: 10px 15px;
+
+}
+
+input[type="file"]::file-selector-button:hover {
+  background-color: #595959;
+  box-shadow: 3px 3px 7px rgb(89, 89, 89, 0.3);
+}
+
+label {
+  color: black;
+  font: bold;
+}
+
+@mixin epic-sides() {
+  position: relative;
+  z-index: 1;
+
+  &:before {
+    position: absolute;
+    content: "";
+    display: block;
+    top: 0;
+    left: -5000px;
+    height: 100%;
+    width: 15000px;
+    z-index: -1;
+    @content;
+  }
+}
+
+li {
+  text-align: left;
+  padding-bottom: 5px;
+}
+
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+  background-color: #fff;
+  color: black;
+  margin: 10px 2px;
+}
+
+td,
+th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  border: 1px solid black;
+  padding: 8px;
+  word-wrap: break-word;
+  /* Wrap long words */
+  overflow-wrap: break-word;
+  /* Break words to prevent overflow */
+  max-width: 200px;
+  /* Set max width to prevent cell from growing indefinitely */
+}
+
+ul h3{
+  display: flex;
+
+}
+
+
+ul.challanError, ul.paymentError {
+  list-style-type: none; /* Remove default list style */
+  padding: 10px; /* Add some padding */
+  margin: 10px 0; /* Add some margin between lists */
+  border: 2px solid #f00; /* Red border to highlight error lists */
+  border-radius: 5px; /* Rounded corners */
+  background-color: #ffe6e6; /* Light red background color */
+  display: none;
+}
+
+.challanError h3, .paymentError h3 {
+  font-size: 1.5em; /* Larger font size for header */
+  color: #d00; /* Dark red color for header text */
+  margin: 0 0 10px 0; /* Margin to separate header from list items */
+}
+
+ul.challanError li, ul.paymentError li {
+  font-size: 1em; /* Standard font size for list items */
+  color: #900; /* Dark red color for error text */
+  margin: 5px 0; /* Margin between list items */
+  padding-left: 20px; /* Indentation for list items */
+  position: relative; /* Position relative to add custom bullet */
+}
+
+ul.challanError li::before, ul.paymentError li::before {
+  content: '⚠️'; /* Custom warning icon */
+  color: #d00; /* Dark red color for icon */
+  position: absolute; /* Position icon absolutely */
+  left: 0; /* Align icon to the left */
+  top: 0; /* Align icon to the top */
+  font-size: 1em; /* Font size for icon */
+  margin-right: 10px; /* Space between icon and text */
+}

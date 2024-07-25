@@ -1,0 +1,469 @@
+const { app, BrowserWindow, ipcMain } = require("electron");
+const path = require("node:path");
+const XLSX = require("xlsx");
+const writeXlsxFile = require("write-excel-file/node");
+
+if (require("electron-squirrel-startup")) {
+  app.quit();
+}
+
+const createWindow = () => {
+  const mainWindow = new BrowserWindow({
+    title: 'Nimar Motors Khargone',
+    width: 800,
+    height: 600,
+    icon: path.join(__dirname, 'NimarMotor.png'),
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: true,
+      preload: path.join(__dirname, "preload.js"),
+    },
+  });
+
+  mainWindow.loadFile(path.join(__dirname, "index.html"));
+  mainWindow.webContents.openDevTools();
+};
+
+// Define data arrays
+let data1 = [];
+let data2 = [];
+let dataForExcelObj = [];
+let dat1;
+let dat2;
+// var challanMap;
+
+let finalJSON1 = [];
+let finalJSON2 = [];
+let DateJSON1 = [];
+let DateJSON2 = [];
+// Define functions
+
+function calculateDaysBetween(startDate, endDate) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const diffTime = Math.abs(end - start);
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+}
+
+
+function interestAmount(dueAmt, dueDays) {
+  return (dueDays * (((dueAmt) * 0.135) / 365));
+}
+
+function getLastDateOfMonth(month, year) {
+
+  if (month < 1 || month > 12) {
+    throw new Error('Invalid month');
+  }
+
+
+  const nextMonthFirstDay = new Date(year, month, 1);
+
+  const lastDayOfMonth = new Date(nextMonthFirstDay.getTime() - 1).getDate();
+
+  return lastDayOfMonth;
+}
+
+
+function getUniqueIds(data) {
+  const uniqueIds = new Set();
+
+  data.forEach(item => {
+    const ids = Object.keys(item);
+    ids.forEach(id => uniqueIds.add(id));
+  });
+
+  return Array.from(uniqueIds);
+}
+
+function getTotalChallanQnt(data, id) {
+  let total = 0;
+  data.forEach((item) => {
+    const itemKeys = Object.keys(item);
+    if (itemKeys.includes(id)) {
+      item[id].forEach((entry) => {
+        const key = Object.keys(entry);
+        console.log(entry[key])
+        total += entry[key].challanQnt;
+        console.log("amount::::", total);
+      });
+    }
+  });
+
+  return total;
+}
+
+function findSimilarKeyValues(jsonArray, key) {
+  return jsonArray.filter((row) => row["Customer Code"] === key);
+}
+
+function findSimilarDates(jsonArray, key) {
+  return jsonArray.filter((row) => row.Date === key);
+}
+
+function sumAverageRate(keyArray) {
+  return keyArray.reduce((sum, item) => sum + parseFloat(item["Average Rate"]), 0);
+}
+
+
+function applyPaymentsAndCalculateInterest(datt1, datt2) {
+
+  const challanMap = datt1.reduce((acc, purchase) => {
+    if (!acc[purchase['Customer Code']]) acc[purchase['Customer Code']] = [];
+    acc[purchase['Customer Code']].push({ ...purchase, RemainingChallanAmount: purchase['Total Amount'] });
+    return acc;
+  }, {});
+
+
+  datt2.forEach(payment => {
+
+    if (challanMap[payment['Customer Code']]) {
+
+      let RemainingChallanAmountPayment = payment['Total Amount'];
+      for (const purchase of challanMap[payment['Customer Code']]) {
+        if (RemainingChallanAmountPayment === 0) break;
+
+        if (purchase.RemainingChallanAmount > 0) {
+
+          const deduction = Math.min(purchase.RemainingChallanAmount, RemainingChallanAmountPayment);
+
+          purchase.RemainingChallanAmount -= deduction;
+
+          RemainingChallanAmountPayment -= deduction;
+        }
+      }
+    }
+
+  })
+
+  const EndDate = "2025-03-31T18:30:00.000Z"
+
+
+  for (const key in challanMap) {
+    
+    challanMap[key].forEach(purchase => {
+        if (purchase.RemainingChallanAmount > 0) {
+                  
+          const parsedDate = XLSX.SSF.parse_date_code(purchase.Date);
+  const jsDate = new Date(parsedDate.y, parsedDate.m - 1, parsedDate.d, parsedDate.H, parsedDate.M, parsedDate.S);
+
+            const daysPastDue = calculateDaysBetween(jsDate, EndDate) - 10;
+            
+            if (daysPastDue > 0) {
+                purchase.interest = interestAmount(purchase.RemainingChallanAmount, daysPastDue);
+               
+            }
+        }
+    });
+}
+
+return challanMap;
+}
+
+
+
+ipcMain.on("file-selected1", (event, path) => {
+  const workbook1 = XLSX.readFile(path);
+  const sheetName1 = workbook1.SheetNames[0];
+  const sheet1 = workbook1.Sheets[sheetName1];
+  data1 = XLSX.utils.sheet_to_json(sheet1);
+
+
+  // Process data1
+  // data1.forEach((row) => {
+  //   const val = row["Customer Code"];
+  //   const date = row.Date;
+  //   const existingRecord = DateJSON1.find((record) => record.Id === val);
+
+  //   if (existingRecord) {
+  //     const existingDateEntry = existingRecord[date];
+  //     if (existingDateEntry) {
+  //       existingDateEntry.SumAverageRate += parseFloat(row["Total Amount"]);
+  //       existingDateEntry.challanQnt += 1;
+  //     } else {
+  //       existingRecord[date] = {
+  //         SumAverageRate: parseFloat(row["Total Amount"]),
+  //         challanQnt: 1,
+  //       };
+  //     }
+  //   } else {
+  //     const newRecord = { Id: val };
+  //     newRecord[date] = {
+  //       partyName: row["Customer Name"],
+  //       SumAverageRate: parseFloat(row["Total Amount"]),
+  //       challanQnt: 1,
+  //     };
+  //     DateJSON1.push(newRecord);
+  //   }
+  // });
+
+  // finalJSON1 = DateJSON1.map(obj => {
+  //   const { Id, ...rest } = obj;
+  //   const keys = Object.keys(rest).slice(0, Object.keys(rest).length);
+  //   const newObj = { [Id]: keys.map(key => ({ [key]: rest[key] })) };
+  //   return newObj;
+  // });
+  // console.log(data1);
+  // console.log("Final JSON 1", JSON.stringify(finalJSON1));
+  dat1 = data1;
+  dat1.forEach(obj => {
+    delete obj.Sno;
+  })
+
+  // dat1.sort((a, b) => {
+  //   if (a['Customer Code'] !== b['Customer Code']) return a['Customer Code'] - b['Customer Code'];
+  //   return new Date(a.Date) - new Date(b.Date);
+  // });
+
+  // challanMap = dat1.reduce((acc, purchase) => {
+  //   if (!acc[purchase['Customer Code']]) acc[purchase['Customer Code']] = [];
+  //   acc[purchase['Customer Code']].push({ ...purchase, RemainingChallanAmount: purchase['Total Amount'] });
+  //   return acc;
+  // }, {});
+
+
+  // console.log(dat1);
+
+});
+
+
+
+
+
+ipcMain.on("file-selected2", (event, path) => {
+  const workbook2 = XLSX.readFile(path);
+  const sheetName2 = workbook2.SheetNames[0];
+  const sheet2 = workbook2.Sheets[sheetName2];
+  data2 = XLSX.utils.sheet_to_json(sheet2);
+
+
+  // data2.forEach((row) => {
+  //   const val = row["Customer Code"];
+  //   const date = row.Date;
+  //   const existingRecord = DateJSON2.find((record) => record.Id === val);
+
+  //   if (existingRecord) {
+  //     const existingDateEntry = existingRecord[date];
+  //     if (existingDateEntry) {
+  //       existingDateEntry.totalReceivedAmount += parseFloat(row["Total Amount"]);
+  //     } else {
+  //       existingRecord[date] = {
+  //         totalReceivedAmount: parseFloat(row["Total Amount"])
+  //       };
+  //     }
+  //   } else {
+  //     const newRecord = { Id: val };
+  //     newRecord[date] = {
+  //       partyName: row["Customer Name"],
+  //       totalReceivedAmount: parseFloat(row["Total Amount"])
+  //     };
+  //     DateJSON2.push(newRecord);
+  //   }
+  // });
+  // finalJSON2 = DateJSON2.map((obj) => {
+  //   const { Id, ...rest } = obj;
+  //   const keys = Object.keys(rest).slice(0, Object.keys(rest).length);
+  //   const newObj = { [Id]: keys.map(key => ({ [key]: rest[key] })) };
+  //   return newObj;
+  // });
+
+  // console.log(finalJSON2);
+
+
+  // finalJSON1.forEach((row) => {
+  //   let id = Object.keys(row)[0];
+  //   let totalSumAmount = 0;
+  //   let lastDate = 0;
+  //   let paymentLeft = 0;
+  //   let interestLeft = 0;
+  //   let lastProcessedDay = 0;
+  //   let newobj = {};
+  //   let partyName = "";
+
+  //   let challanQnt = getTotalChallanQnt(finalJSON1, id);
+  //   console.log("getTotalChallanQnt::::", challanQnt);
+
+  //   row[id].forEach((obj) => {
+  //     let key = Object.keys(obj)[0];
+  //     partyName = obj[key].partyName;
+  //     // sumAverageRate = obj[key].SumAverageRate;
+  //     totalSumAmount += parseInt(obj[key].SumAverageRate);
+  //     lastDate = parseInt(key);
+  //     paymentLeft = parseInt(totalSumAmount);
+  //   })
+
+  //   const uniqueIds = getUniqueIds(finalJSON2);
+  //   // console.log(uniqueIds);
+  //   //if payment recived recipt exists 
+  //   if (uniqueIds.includes(id)) {
+  //     finalJSON2.forEach((row) => {
+  //       if (id == Object.keys(row)[0]) {
+  //         row[id].forEach((obj2) => {
+  //           let key = parseInt(Object.keys(obj2)[0]);
+  //           if (key > lastDate + 10) {
+  //             let dueDays = key - lastDate + 10;
+  //             interestLeft = interestAmount(paymentLeft, dueDays)
+  //             paymentLeft = paymentLeft + interestLeft;
+  //             let currentPaid = obj2[key].totalReceivedAmount;
+  //             paymentLeft = paymentLeft - currentPaid;
+  //             lastProcessedDay = key;
+  //           } else {
+  //             let currentPaid = obj2[key].totalReceivedAmount;
+  //             paymentLeft = paymentLeft - currentPaid;
+  //             lastProcessedDay = key;
+  //           }
+  //         })
+  //         // console.log("Party Name", id, "TotalPartyAmount", totalSumAmount, "LastChallanIssueDate", lastDate, "LastPaymentDate", lastProcessedDay, "PaymentRemainingChallanAmount", paymentLeft)
+  //         if (!partyName) {
+  //           partyName = row[id][0][Object.keys(row[id][0])[0]].partyName;
+  //         }
+  //         newobj = {
+  //           "Party Id": id,
+  //           "Party Name": partyName,
+  //           "Last Challan Date": lastDate,
+  //           "challan Quantity": challanQnt,
+  //           "Total Challan Amount": totalSumAmount,
+  //           "Last Payment Date": lastProcessedDay,
+  //           "Amount Left": paymentLeft
+  //         }
+  //         dataForExcelObj.push(newobj)
+  //       }
+  //     })
+  //   }
+  //   //if payment recived recipt not exists (calculate for last day of month) 
+  //   else {
+  //     if (lastProcessedDay == 0) {
+
+  //       const parseDueDate = XLSX.SSF.parse_date_code(lastDate);
+  //       const dueDateMonth = parseDueDate.m;
+  //       const dueDateYear = parseDueDate.y;
+  //       let lastPaidDate = parseDueDate.d;
+
+  //       // row[id].forEach((obj) => {
+  //       //   let key = Object.keys(obj)[0];
+  //       //   partyName = obj[key].partyName
+  //       //   challanQnt = obj[key].challanQnt
+  //       //   sumAverageRate = obj[key].SumAverageRate
+  //       //   totalSumAmount += obj[key].SumAverageRate;
+  //       //   lastDate = parseInt(key);
+  //       //   paymentLeft = totalSumAmount;
+  //       // })
+
+  //       let lastMonthDate = getLastDateOfMonth(dueDateMonth, dueDateYear);
+
+  //       if (lastMonthDate - lastPaidDate > 10) {
+  //         let dueDays = lastMonthDate - lastPaidDate;
+  //         interestLeft = interestAmount(paymentLeft, dueDays)
+  //         paymentLeft = paymentLeft + interestLeft;
+  //       }
+  //     }
+  //     // console.log("Party Name", id, "TotalPartyAmount", totalSumAmount, "LastChallanIssueDate", lastDate, "LastPaymentDate", lastProcessedDay, "PaymentRemainingChallanAmount", paymentLeft)
+  //     if (!partyName) {
+  //       partyName = row[id][0][Object.keys(row[id][0])[0]].partyName;
+  //     }
+  //     newobj = {
+  //       "Party Id": id,
+  //       "Party Name": partyName,
+  //       "Last Challan Date": lastDate,
+  //       "challan Quantity": challanQnt,
+  //       "Total Challan Amount": totalSumAmount,
+  //       "Last Payment Date": lastProcessedDay,
+  //       "Amount Left": paymentLeft
+  //     }
+  //     dataForExcelObj.push(newobj)
+
+  //   }
+  // }
+  // )
+
+  // console.log(data2);
+
+  dat2 = data2;
+
+//   dat2.forEach(payment => {
+
+//     if (challanMap[payment['Customer Code']]) {
+
+//       let RemainingChallanAmountPayment = payment['Total Amount'];
+//       for (const purchase of challanMap[payment['Customer Code']]) {
+//         if (RemainingChallanAmountPayment === 0) break;
+
+//         if (purchase.RemainingChallanAmount > 0) {
+
+//           const deduction = Math.min(purchase.RemainingChallanAmount, RemainingChallanAmountPayment);
+
+//           purchase.RemainingChallanAmount -= deduction;
+
+//           RemainingChallanAmountPayment -= deduction;
+//         }
+//       }
+//     }
+
+//   })
+
+
+//   const currentDate = new Date();
+
+
+//   for (const key in challanMap) {
+//     challanMap[key].forEach(purchase => {
+//         if (purchase.RemainingChallanAmount > 0) {
+                  
+//           const parsedDate = XLSX.SSF.parse_date_code(purchase.Date);
+//   const jsDate = new Date(parsedDate.y, parsedDate.m - 1, parsedDate.d, parsedDate.H, parsedDate.M, parsedDate.S);
+
+//             const daysPastDue = calculateDaysBetween(jsDate, currentDate) - 10;
+//             console.log(daysPastDue);
+//             if (daysPastDue > 0) {
+//                 purchase.interest = interestAmount(purchase.RemainingChallanAmount, daysPastDue);
+//                 console.log(purchase.interest);
+//                 //  purchase.RemainingChallanAmount * interestRatePerDay * daysPastDue;
+//             }
+//         }
+//     });
+// }
+
+
+const updatedChallanMap = applyPaymentsAndCalculateInterest(dat1,dat2);
+  console.log(updatedChallanMap);
+
+
+
+
+
+
+
+
+
+
+
+
+  // console.log("Final JSON 2", JSON.stringify(finalJSON2));
+  // console.log("dataForExcelObj:::::", dataForExcelObj)
+
+  // event.reply("dataForExcelObj", dataForExcelObj);
+
+  // const newWorkbook = XLSX.utils.book_new();
+  // const newSheet = XLSX.utils.json_to_sheet(dataForExcelObj);
+  // XLSX.utils.book_append_sheet(newWorkbook, newSheet, "Sheet1");
+  // XLSX.writeFile(newWorkbook, "finalDataSheet.xlsx");
+
+});
+
+
+
+
+app.whenReady().then(() => {
+  createWindow();
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
+});
+
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
+});

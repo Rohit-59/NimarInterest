@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Nimar Motors Interest Calculator</title>
+  <link rel="stylesheet" href="index.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  &nbsp;&nbsp;&nbsp;
+  <div class="container" style="text-align: center;">
+
+
+    <img style="text-align: center;" src="./assets/NimarMotor.png" alt="logo" />
+    <h1 style="text-align: center;color: #2d2a26;">Nimar Motors</h1>
+    <h1 style="text-align: center;color: #2d2a26; "> Challan Interest Calculator </h1>
+
+    <!-- Left section -->
+    <div style="display: flex;">
+      <div style="color: #2d2a26; padding-left: 40px; padding-right: 15px;  width: 50%;">
+        <form id="myForm" style="margin: 35px;">
+          <h2 style="text-align: center;  font-size: 27px; color: rgb(201, 3, 3);">Interest
+            Calculation Form</h2>
+          <div class="errormsg" style="color: red;"></div>
+          <div style="display: flex; flex-direction: column; ">
+
+            <div style="display: flex; align-items: center;   justify-content: space-between; ">
+              <label for="days" style="color: #2d2a26;">Days for Interest Calculation : </label>
+
+              <input type="number" id="days" name="days" maxlength="4" size="1" required />
+            </div>
+            <br>
+            <div style="display: flex; align-items: center; justify-content: space-between;  ">
+              <label for="percent" style="color: #2d2a26;">Percentage for Interest Calculation : </label>
+
+              <input type="text" id="percent" name="percent" maxlength="4" size="3" required />
+            </div>
+            <br>
+            <div style="display: flex; align-items: center; justify-content: space-between;  ">
+              <label for="date" style="color: #2d2a26;">End Date : </label>
+
+              <input type="date" id="date" name="date" required />
+            </div>
+
+          </div>
+          <br>
+
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label for="file-input1" class="custom-file-label">Select Challan Info File :</label>
+            <input class="balloon" type="file" name="file1" id="file-input1" required />
+          </div>
+          <br>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label for="file-input2" class="custom-file-label">Select Payment Info File :</label>
+            <input class="balloon" type="file" name="file2" id="file-input2" required>
+          </div>
+          <br>
+          <div style="display: flex; justify-content: center; margin: 15px 0; gap: 53px; align-items: center;">
+            <button type="button" id="reset-button" style="text-align: center;  align-items: center; ">Reset</button>
+            <br>
+            <button type="submit" style="text-align: center;  align-items: center; ">Submit</button>
+          </div>
+          <div class="error" style=" color: red;
+    font-size: 0.9em;
+    margin-top: 10px;" id="error-message"></div>
+        </form>
+      </div>
+
+      <!-- vertical line -->
+      <div class="vl"></div>
+
+      <!-- Right Section -->
+      <div style="  display: flex; flex-direction: column; margin: 5px 25px; color: #2d2a26; padding-left: 20px; padding-right: 25px; width: 50%;">
+        <div style="text-align: center; font-size: large; color: rgb(201, 3, 3);">
+          <h2 class="rightSectionHead">
+            Steps to Calculate the Interest
+          </h2>
+        </div>
+        <div class="list-container">
+          <ul>
+            <li>
+              <p><span style="font-weight: bolder;">Fill from Top to Bottom:</span> Always fill out the form starting
+                from the top. If you do it from the bottom, it might mess up the results.
+              </p>
+            </li>
+            <li>
+              <p><span style="font-weight: bolder;">Reset Before New Data:</span> Always hit the reset button before you
+                upload new files. This makes sure everything is accurate and there's no data mix-up.</p>
+
+            </li>
+            <li>
+              <p><span style="font-weight: bolder;">Enter Days for Interest:</span> Type in the number of days after
+                which you want to start calculating the interest.</p>
+            </li>
+            <li>
+              <p><span style="font-weight: bolder;">Enter Interest Percentage:</span> Enter the percentage rate for the
+                interest.</p>
+            </li>
+            <li>
+              <p><span style="font-weight: bolder;">End Date and Files:</span> Pick the date (in dd-mm-yyyy format)
+                until which you want to calculate the interest. Upload the "Challan_info_excel.xlsx" for challan info
+                and "Payment_info_excel.xlsx" for payment info.</p>
+            </li>
+            <li>
+              <p><span style="font-weight: bolder;">Submit to Render Table:</span> Click the submit button to process
+                the data and render the interest calculation table.</p>
+            </li>
+          </ul>
+
+        </div>
+        <ul class="challanError">
+          <!-- <h1 class="challanErrHead"></h1> -->
+        </ul>
+        <ul class="paymentError">
+          <!-- <h1 class="paymentErrHead"></h1> -->
+        </ul>
+      </div>
+    </div>
+    <table></table>
+  </div>
+  <script src="preload.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
+</body>
+
+</html>

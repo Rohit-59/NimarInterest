@@ -1,0 +1,8 @@
+version: 1.0.0
+files:
+  - url: nimar-motors-app-Setup-1.0.0.exe
+    sha512: 34+9ZuC7E0pGUdAMzcvdntaxhAP+dr0NGqC/OL8WDKLbmO/n3PCFoZ+uXMmFVzfZ7CGcsfwjr5jEbIbJLHyQXg==
+    size: 80393250
+path: nimar-motors-app-Setup-1.0.0.exe
+sha512: 34+9ZuC7E0pGUdAMzcvdntaxhAP+dr0NGqC/OL8WDKLbmO/n3PCFoZ+uXMmFVzfZ7CGcsfwjr5jEbIbJLHyQXg==
+releaseDate: '2024-07-05T08:28:00.022Z'
